@@ -102,14 +102,14 @@ button:hover {
 
 /* External links (WoWHead Dressing Room) */
 .external-link {
-  color: #66ccff;
+  color: #ffd700;
   text-decoration: underline;
   font-weight: bold;
   transition: all 0.2s ease-in-out;
 }
 
 .external-link:hover {
-  color: #99ddff;
+  color: #fff176;
   text-shadow: 0 0 5px #000;
 }
 
@@ -154,11 +154,28 @@ input[name="characterReferences"]:focus {
 }
 
 /* Disclaimer box */
+.form-disclaimer p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.form-disclaimer a {
+  color: #ffd700;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-disclaimer a:hover {
+  color: #fff176;
+  text-shadow: 0 0 5px #000;
+}
+
 .form-disclaimer {
-  background: rgba(20, 10, 5, 0.85);
+  background: rgba(20, 10, 5, 0.9);
   border: 2px solid #8b5a2b;
-  border-radius: 10px;
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   margin-top: 2rem;
   font-size: 0.95rem;
   color: #ffe8b3;
@@ -240,4 +257,17 @@ input[name="characterReferences"]:focus {
 
 .remove-button:hover {
   background: red;
+}
+
+.price-list-container {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.price-list-image {
+  max-width: 100%;
+  height: auto;
+  border: 4px solid #8b5a2b;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2);
 }

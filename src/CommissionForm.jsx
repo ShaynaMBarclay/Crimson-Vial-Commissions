@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PaymentButton from "./PaymentButton";
 import emailjs from "@emailjs/browser";
+import priceList from "./assets/ellieform.png";
 
 function CommissionForm() {
   const [formData, setFormData] = useState({
@@ -342,16 +343,30 @@ function CommissionForm() {
 
       {/* Disclaimer */}
       <div className="form-disclaimer">
-        <p>
-          Please note that I am a 3D artist, not a traditional drawing artist. Each
-          model, pose, and scene is handcrafted, which takes time. I appreciate
-          your patience and understanding. I communicate regularly to keep you
-          updated on your commission.
-        </p>
-      </div>
+         <p>
+    Please note that I am a 3D artist, not a traditional drawing artist. Each
+    model, pose, and scene is handcrafted, which takes time. I appreciate
+    your patience and understanding. I communicate regularly to keep you
+    updated on your commission.
+  </p>
+  <p>
+    Please reference the price list below. I will confirm the full price with you
+    before starting the project. I will reach out via the selected platform and
+    contact information you provided. For example, if you choose Twitter or
+    Discord, messaging must be turned on and easily accessible for smooth
+    communication. Accounts without easily accessible messaging cannot be
+    contacted, so please keep this in mind. If this may be a problem, you can
+    reach me at <a href="https://x.com/crimson_vial" target="_blank" rel="noopener noreferrer">My Twitter</a>.
+  </p>
+</div>
 
       {/* Status Message */}
       {statusMessage && <p className="submission-success">{statusMessage}</p>}
+
+      {/* Price List Image */}
+      <div className="price-list-container">
+        <img src={priceList} alt="Commission Price List" className="price-list-image" />
+      </div>
     </form>
   );
 }
