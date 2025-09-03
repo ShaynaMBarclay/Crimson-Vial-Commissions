@@ -166,3 +166,34 @@ input[name="characterReferences"]:focus {
   text-shadow: 1px 1px 3px #000;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) inset;
 }
+
+.submit-button {
+  display: block;
+  width: 100%;
+  background: linear-gradient(to bottom, #a0522d, #5c3317);
+  border: 2px solid #ffd700;
+  padding: 12px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  font-family: 'Cinzel Decorative', serif;
+  color: #ffd700;
+  border-radius: 10px;
+  cursor: pointer;
+  text-shadow: 1px 1px 4px #000;
+  margin-top: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.submit-button:hover {
+  background: linear-gradient(to bottom, #c06030, #4b2c15);
+  box-shadow: 0 0 15px #ffd700, inset 0 0 10px rgba(255, 215, 0, 0.4);
+  transform: scale(1.05);
+}
+
+.submission-success {
+  margin-top: 1rem;
+  color: #00ff99;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 1px 1px 3px #000;
+}

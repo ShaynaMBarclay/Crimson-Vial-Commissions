@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PaymentButton from "./PaymentButton";
+import emailjs from "@emailjs/browser";
 
 function CommissionForm() {
   const [formData, setFormData] = useState({
@@ -13,15 +14,18 @@ function CommissionForm() {
     subjectDetails: "",
     poseExpression: "",
     settingAtmosphere: "",
-    references: [], // general references
-    characterReferences: [], // specific character refs
-    characterLink: "", // WoWHead Dressing Room link
+    references: [],
+    characterReferences: [],
+    characterLink: "",
     price: 20, // base commission price
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+
   function handleChange(e) {
     const { name, value, files } = e.target;
-
     if (name === "references" || name === "characterReferences") {
       setFormData({ ...formData, [name]: Array.from(files) });
     } else {
@@ -37,8 +41,39 @@ function CommissionForm() {
       return;
     }
 
-    console.log("Commission request:", formData);
-    // Send data to backend/email service
+    setIsSubmitting(true);
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    const templateParams = {
+      name: formData.name,
+      email: formData.email,
+      twitter: formData.twitter,
+      discord: formData.discord,
+      requestDetails: formData.requestDetails,
+      intendedUse: formData.intendedUse,
+      subjectCount: formData.subjectCount,
+      subjectDetails: formData.subjectDetails,
+      poseExpression: formData.poseExpression,
+      settingAtmosphere: formData.settingAtmosphere,
+      characterLink: formData.characterLink,
+      price: formData.price,
+    };
+
+    emailjs.send(serviceId, templateId, templateParams, publicKey)
+      .then((response) => {
+        console.log("Email sent!", response.status, response.text);
+        setStatusMessage("Your commission request has been sent successfully!");
+        setSubmitted(true);
+        setIsSubmitting(false);
+      })
+      .catch((error) => {
+        console.error("Email sending failed:", error);
+        setStatusMessage("There was an error sending your request. Please try again.");
+        setIsSubmitting(false);
+      });
   }
 
   return (
@@ -49,8 +84,7 @@ function CommissionForm() {
       <label>
         Describe Your Commission
         <p className="form-help-text">
-          The more detail + references you can give me, (add you references below) the more accurate I am able to be with your artwork. 
-          Otherwise I will creatively interpret what I feel is best.
+          The more detail + references you can give me, (add your references below) the more accurate I am able to be with your artwork. Otherwise I will creatively interpret what I feel is best.
         </p>
       </label>
       <textarea
@@ -65,10 +99,7 @@ function CommissionForm() {
       <label>
         Intended Use
         <p className="form-help-text">
-          What will this artwork be used for? Please include sizing information if you know it. 
-          If you’re unsure, don’t worry—I can help! Just share your intended use, and I’ll be in touch. 
-          For computer-related projects (wallpapers, Twitch graphics, etc.), please include your screen resolution 
-          and any other technical details I should know.
+          What will this artwork be used for? Please include sizing information if you know it. If unsure, I can help. For computer-related projects, please include screen resolution or other technical details.
         </p>
       </label>
       <textarea
@@ -82,7 +113,7 @@ function CommissionForm() {
       <label>
         Number of Subjects/Models
         <p className="form-help-text">
-          How many characters, figures, or models would you like included in your commission?
+          How many characters, figures, or models would you like included?
         </p>
       </label>
       <input
@@ -98,8 +129,7 @@ function CommissionForm() {
       <label>
         Subject Details
         <p className="form-help-text">
-          Please describe who or what the subjects are. This could include names, roles, personalities,
-          or any specific traits you’d like me to capture.
+          Describe the subjects: names, roles, personalities, or traits to capture.
         </p>
       </label>
       <textarea
@@ -113,8 +143,7 @@ function CommissionForm() {
       <label>
         Pose & Expression
         <p className="form-help-text">
-          Please provide details on the pose(s) and expressions you’d like. 
-          If you’re unsure, you can leave this blank and I’ll use creative judgment.
+          Provide details on pose(s) and expressions. Leave blank if unsure.
         </p>
       </label>
       <textarea
@@ -128,10 +157,7 @@ function CommissionForm() {
       <label>
         Setting & Atmosphere
         <p className="form-help-text">
-          Please provide details on the setting you’d like. Is this daytime, nighttime, sunset, 
-          or something else? Where is this in-game? Are there weather conditions? 
-          If you’d like a specific place, please provide screenshots, details, and a map location pin 
-          in the upload reference field below.
+          Provide details on setting: time of day, location, weather, screenshots, etc.
         </p>
       </label>
       <textarea
@@ -145,17 +171,16 @@ function CommissionForm() {
       <label>
         Character References
         <p className="form-help-text">
-          Please create your character(s) in{" "}
+          Create your character(s) in{" "}
           <a 
-            href="https://www.wowhead.com/dressing-room#fs8zz0zJ89c8zU8Tp8zS8TR8zW8TK8zX8T48st8zD28d38MFY8zYe8dLg8Mtd808zY8js8d58MHb8d28MFS8rz8MHg8rs8MJB877hvXY87cvXQ87VvYh808vXU808vXZ808vYa808vYk87q"
+            href="https://www.wowhead.com/dressing-room"
             target="_blank" 
             rel="noopener noreferrer"
             className="external-link"
           >
             WoWHead’s Dressing Room
           </a>{" "}
-          and send me the link below. Additionally, please upload in-game screenshots of your character(s), 
-          pets, or mounts (if applicable). The more references you provide, the more accurate the artwork will be.
+          and send the link below. Upload in-game screenshots if available.
         </p>
       </label>
       <input
@@ -163,7 +188,7 @@ function CommissionForm() {
         name="characterLink"
         value={formData.characterLink}
         onChange={handleChange}
-        placeholder="Paste your WoWHead dressing room link here"
+        placeholder="Paste WoWHead dressing room link here"
       />
       <input
         type="file"
@@ -183,10 +208,9 @@ function CommissionForm() {
         required
       />
 
-      {/* Contact info */}
+      {/* Contact Info */}
       <fieldset className="contact-info">
         <legend>Contact Information (at least one required)</legend>
-
         <label>Email</label>
         <input
           type="email"
@@ -194,7 +218,6 @@ function CommissionForm() {
           value={formData.email}
           onChange={handleChange}
         />
-
         <label>Twitter</label>
         <input
           type="text"
@@ -203,7 +226,6 @@ function CommissionForm() {
           onChange={handleChange}
           placeholder="@yourhandle"
         />
-
         <label>Discord</label>
         <input
           type="text"
@@ -214,13 +236,23 @@ function CommissionForm() {
         />
       </fieldset>
 
+      {/* Payment */}
+      <PaymentButton amount={formData.price} />
+
+      {/* Submit Button */}
+      <button type="submit" disabled={isSubmitting} className="submit-button">
+        {isSubmitting ? "Submitting..." : "Submit Commission Request"}
+      </button>
+
       {/* Disclaimer */}
       <div className="form-disclaimer">
-       <p>
-    Please note that I am a 3D artist, not a traditional drawing artist. Each model, pose, and scene is handcrafted, which takes time. 
-    I appreciate your patience and understanding throughout the process. I make it a priority to communicate regularly and keep you updated on your commission.
-      </p>
-    </div>
+        <p>
+          Please note that I am a 3D artist, not a traditional drawing artist. Each model, pose, and scene is handcrafted, which takes time. I appreciate your patience and understanding. I communicate regularly to keep you updated on your commission.
+        </p>
+      </div>
+
+      {/* Status Message */}
+      {statusMessage && <p className="submission-success">{statusMessage}</p>}
     </form>
   );
 }
