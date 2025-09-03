@@ -280,6 +280,16 @@ input[name="characterReferences"]:focus {
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
+.watermark {
+  text-align: center;
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 0.8rem;
+  color: rgba(255, 215, 0, 0.6);
+  margin-top: 1.5rem;
+  text-shadow: 1px 1px 2px #000;
+  pointer-events: none;
+}
+
 /* WebKit Browsers */
 ::-webkit-scrollbar {
   width: 12px;

@@ -265,7 +265,9 @@ function CommissionForm() {
       <div className="price-list-container">
         <img src={priceList} alt="Commission Price List" className="price-list-image" />
       </div>
+      <div className="watermark">Created by @Sylvariae</div>
     </form>
+    
   );
 }
 
