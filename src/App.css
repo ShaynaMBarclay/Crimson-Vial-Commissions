@@ -91,3 +91,64 @@ button:hover {
   border-top: 2px solid #8b5a2b;
   padding-top: 1rem;
 }
+
+/* Form help text (already existing in JS, now styled in CSS) */
+.form-help-text {
+  font-size: 0.9rem;
+  color: #ffe8b3;
+  margin: 0.3rem 0 1rem;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* External links (WoWHead Dressing Room) */
+.external-link {
+  color: #66ccff;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.external-link:hover {
+  color: #99ddff;
+  text-shadow: 0 0 5px #000;
+}
+
+/* Character References URL input */
+input[name="characterLink"] {
+  border: 2px solid #a67c52;
+  border-radius: 6px;
+  background: #2b1c10;
+  color: #f5e6c5;
+  font-size: 1rem;
+  font-family: 'Uncial Antiqua', serif;
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 1rem;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+input[name="characterLink"]:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px #ffd700;
+}
+
+/* Character References file upload */
+input[name="characterReferences"] {
+  border: 2px solid #a67c52;
+  border-radius: 6px;
+  background: #2b1c10;
+  color: #f5e6c5;
+  font-size: 1rem;
+  font-family: 'Uncial Antiqua', serif;
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 1rem;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+input[name="characterReferences"]:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px #ffd700;
+}
