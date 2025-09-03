@@ -1,7 +1,8 @@
 import { useState } from "react";
-import PaymentButton from "./PaymentButton";
 import emailjs from "@emailjs/browser";
 import priceList from "./assets/ellieform.png";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../Firebase";
 
 function CommissionForm() {
   const [formData, setFormData] = useState({
@@ -18,7 +19,6 @@ function CommissionForm() {
     references: [],
     characterReferences: [],
     characterLink: "",
-    price: 20,
   });
 
   const [referencePreviews, setReferencePreviews] = useState([]);
@@ -71,7 +71,7 @@ function CommissionForm() {
     setCharacterPreviews(updatedPreviews);
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     if (!formData.email && !formData.twitter && !formData.discord) {
@@ -83,44 +83,84 @@ function CommissionForm() {
 
     setIsSubmitting(true);
 
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    try {
+      // Upload reference images
+      const referenceUrls = await Promise.all(
+        formData.references.map(async (file) => {
+          const storageRef = ref(
+            storage,
+            `references/${Date.now()}_${file.name}`
+          );
+          await uploadBytes(storageRef, file);
+          return getDownloadURL(storageRef);
+        })
+      );
 
-    const templateParams = {
-      name: formData.name,
-      email: formData.email,
-      twitter: formData.twitter,
-      discord: formData.discord,
-      requestDetails: formData.requestDetails,
-      intendedUse: formData.intendedUse,
-      subjectCount: formData.subjectCount,
-      subjectDetails: formData.subjectDetails,
-      poseExpression: formData.poseExpression,
-      settingAtmosphere: formData.settingAtmosphere,
-      characterLink: formData.characterLink,
-      price: formData.price,
-      referenceFiles: formData.references.map((file) => file.name).join(", "),
-      characterFiles: formData.characterReferences
-        .map((file) => file.name)
-        .join(", "),
-    };
+      // Upload character reference images
+      const characterUrls = await Promise.all(
+        formData.characterReferences.map(async (file) => {
+          const storageRef = ref(
+            storage,
+            `characterReferences/${Date.now()}_${file.name}`
+          );
+          await uploadBytes(storageRef, file);
+          return getDownloadURL(storageRef);
+        })
+      );
 
-    emailjs
-      .send(serviceId, templateId, templateParams, publicKey)
-      .then((response) => {
-        console.log("Email sent!", response.status, response.text);
-        setStatusMessage("Your commission request has been sent successfully!");
-        setSubmitted(true);
-        setIsSubmitting(false);
-      })
-      .catch((error) => {
-        console.error("Email sending failed:", error);
-        setStatusMessage(
-          "There was an error sending your request. Please try again."
-        );
-        setIsSubmitting(false);
+      // Send email via EmailJS
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      const templateParams = {
+        name: formData.name,
+        email: formData.email,
+        twitter: formData.twitter,
+        discord: formData.discord,
+        requestDetails: formData.requestDetails,
+        intendedUse: formData.intendedUse,
+        subjectCount: formData.subjectCount,
+        subjectDetails: formData.subjectDetails,
+        poseExpression: formData.poseExpression,
+        settingAtmosphere: formData.settingAtmosphere,
+        characterLink: formData.characterLink,
+        referenceFiles: referenceUrls.join("\n"),
+        characterFiles: characterUrls.join("\n"),
+      };
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+      setStatusMessage("Your commission request has been sent successfully!");
+      setSubmitted(true);
+
+      // Clear form after submission
+      setFormData({
+        name: "",
+        email: "",
+        twitter: "",
+        discord: "",
+        requestDetails: "",
+        intendedUse: "",
+        subjectCount: 1,
+        subjectDetails: "",
+        poseExpression: "",
+        settingAtmosphere: "",
+        references: [],
+        characterReferences: [],
+        characterLink: "",
       });
+      setReferencePreviews([]);
+      setCharacterPreviews([]);
+
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error submitting commission:", error);
+      setStatusMessage(
+        "There was an error sending your request. Please try again."
+      );
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -180,8 +220,8 @@ function CommissionForm() {
       <label>
         Subject Details
         <p className="form-help-text">
-          Describe the subjects: names, roles, personalities, are they mounts, pets, etc. Or traits to
-          capture.
+          Describe the subjects: names, roles, personalities, are they mounts,
+          pets, etc. Or traits to capture.
         </p>
       </label>
       <textarea
@@ -209,7 +249,8 @@ function CommissionForm() {
       <label>
         Setting & Atmosphere
         <p className="form-help-text">
-          Provide details on setting: time of day, location, weather, etc. Screenshots can be uploaded below.
+          Provide details on setting: time of day, location, weather, etc.
+          Screenshots can be uploaded below.
         </p>
       </label>
       <textarea
@@ -282,7 +323,11 @@ function CommissionForm() {
       <div className="image-previews">
         {characterPreviews.map((src, index) => (
           <div key={index} className="preview-container">
-            <img src={src} alt={`character-preview-${index}`} className="preview-image" />
+            <img
+              src={src}
+              alt={`character-preview-${index}`}
+              className="preview-image"
+            />
             <button
               type="button"
               className="remove-button"
@@ -333,9 +378,6 @@ function CommissionForm() {
         />
       </fieldset>
 
-      {/* Payment */}
-      <PaymentButton amount={formData.price} />
-
       {/* Submit Button */}
       <button type="submit" disabled={isSubmitting} className="submit-button">
         {isSubmitting ? "Submitting..." : "Submit Commission Request"}
@@ -343,29 +385,41 @@ function CommissionForm() {
 
       {/* Disclaimer */}
       <div className="form-disclaimer">
-         <p>
-    Please note that I am a 3D artist, not a traditional drawing artist. Each
-    model, pose, and scene is handcrafted, which takes time. I appreciate
-    your patience and understanding. I communicate regularly to keep you
-    updated on your commission.
-  </p>
-  <p>
-    Please reference the price list below. I will confirm the full price with you
-    before starting the project. I will reach out via the selected platform and
-    contact information you provided. For example, if you choose Twitter or
-    Discord, messaging must be turned on and easily accessible for smooth
-    communication. Accounts without easily accessible messaging cannot be
-    contacted, so please keep this in mind. If this may be a problem, you can
-    reach me at <a href="https://x.com/crimson_vial" target="_blank" rel="noopener noreferrer">My Twitter</a>.
-  </p>
-</div>
+        <p>
+          Please note that I am a 3D artist, not a traditional drawing artist.
+          Each model, pose, and scene is handcrafted, which takes time. I
+          appreciate your patience and understanding. I communicate regularly to
+          keep you updated on your commission.
+        </p>
+        <p>
+          Please reference the price list below. I will confirm the full price
+          with you before starting the project. I will reach out via the
+          selected platform and contact information you provided. For example,
+          if you choose Twitter or Discord, messaging must be turned on and
+          easily accessible for smooth communication. Accounts without easily
+          accessible messaging cannot be contacted, so please keep this in mind.
+          If this may be a problem, you can reach me at{" "}
+          <a
+            href="https://x.com/crimson_vial"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            My Twitter
+          </a>
+          .
+        </p>
+      </div>
 
       {/* Status Message */}
       {statusMessage && <p className="submission-success">{statusMessage}</p>}
 
       {/* Price List Image */}
       <div className="price-list-container">
-        <img src={priceList} alt="Commission Price List" className="price-list-image" />
+        <img
+          src={priceList}
+          alt="Commission Price List"
+          className="price-list-image"
+        />
       </div>
     </form>
   );
