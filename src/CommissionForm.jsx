@@ -17,27 +17,66 @@ function CommissionForm() {
     references: [],
     characterReferences: [],
     characterLink: "",
-    price: 20, // base commission price
+    price: 20,
   });
 
+  const [referencePreviews, setReferencePreviews] = useState([]);
+  const [characterPreviews, setCharacterPreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   function handleChange(e) {
     const { name, value, files } = e.target;
-    if (name === "references" || name === "characterReferences") {
-      setFormData({ ...formData, [name]: Array.from(files) });
+
+    if (name === "references") {
+      const newFiles = Array.from(files);
+      const updatedFiles = [...formData.references, ...newFiles];
+      setFormData({ ...formData, references: updatedFiles });
+
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setReferencePreviews([...referencePreviews, ...newPreviews]);
+    } else if (name === "characterReferences") {
+      const newFiles = Array.from(files);
+      const updatedFiles = [...formData.characterReferences, ...newFiles];
+      setFormData({ ...formData, characterReferences: updatedFiles });
+
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setCharacterPreviews([...characterPreviews, ...newPreviews]);
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  }
+
+  function removeReference(index) {
+    const updatedFiles = [...formData.references];
+    updatedFiles.splice(index, 1);
+    setFormData({ ...formData, references: updatedFiles });
+
+    const updatedPreviews = [...referencePreviews];
+    URL.revokeObjectURL(updatedPreviews[index]);
+    updatedPreviews.splice(index, 1);
+    setReferencePreviews(updatedPreviews);
+  }
+
+  function removeCharacterReference(index) {
+    const updatedFiles = [...formData.characterReferences];
+    updatedFiles.splice(index, 1);
+    setFormData({ ...formData, characterReferences: updatedFiles });
+
+    const updatedPreviews = [...characterPreviews];
+    URL.revokeObjectURL(updatedPreviews[index]);
+    updatedPreviews.splice(index, 1);
+    setCharacterPreviews(updatedPreviews);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
 
     if (!formData.email && !formData.twitter && !formData.discord) {
-      alert("Please provide at least one contact method: Email, Twitter, or Discord.");
+      alert(
+        "Please provide at least one contact method: Email, Twitter, or Discord."
+      );
       return;
     }
 
@@ -60,9 +99,14 @@ function CommissionForm() {
       settingAtmosphere: formData.settingAtmosphere,
       characterLink: formData.characterLink,
       price: formData.price,
+      referenceFiles: formData.references.map((file) => file.name).join(", "),
+      characterFiles: formData.characterReferences
+        .map((file) => file.name)
+        .join(", "),
     };
 
-    emailjs.send(serviceId, templateId, templateParams, publicKey)
+    emailjs
+      .send(serviceId, templateId, templateParams, publicKey)
       .then((response) => {
         console.log("Email sent!", response.status, response.text);
         setStatusMessage("Your commission request has been sent successfully!");
@@ -71,7 +115,9 @@ function CommissionForm() {
       })
       .catch((error) => {
         console.error("Email sending failed:", error);
-        setStatusMessage("There was an error sending your request. Please try again.");
+        setStatusMessage(
+          "There was an error sending your request. Please try again."
+        );
         setIsSubmitting(false);
       });
   }
@@ -84,7 +130,9 @@ function CommissionForm() {
       <label>
         Describe Your Commission
         <p className="form-help-text">
-          The more detail + references you can give me, (add your references below) the more accurate I am able to be with your artwork. Otherwise I will creatively interpret what I feel is best.
+          The more detail + references you can give me, (add your references
+          below) the more accurate I am able to be with your artwork. Otherwise
+          I will creatively interpret what I feel is best.
         </p>
       </label>
       <textarea
@@ -99,7 +147,9 @@ function CommissionForm() {
       <label>
         Intended Use
         <p className="form-help-text">
-          What will this artwork be used for? Please include sizing information if you know it. If unsure, I can help. For computer-related projects, please include screen resolution or other technical details.
+          What will this artwork be used for? Please include sizing information
+          if you know it. If unsure, I can help. For computer-related projects,
+          please include screen resolution or other technical details.
         </p>
       </label>
       <textarea
@@ -129,7 +179,8 @@ function CommissionForm() {
       <label>
         Subject Details
         <p className="form-help-text">
-          Describe the subjects: names, roles, personalities, or traits to capture.
+          Describe the subjects: names, roles, personalities, are they mounts, pets, etc. Or traits to
+          capture.
         </p>
       </label>
       <textarea
@@ -157,7 +208,7 @@ function CommissionForm() {
       <label>
         Setting & Atmosphere
         <p className="form-help-text">
-          Provide details on setting: time of day, location, weather, screenshots, etc.
+          Provide details on setting: time of day, location, weather, etc. Screenshots can be uploaded below.
         </p>
       </label>
       <textarea
@@ -167,14 +218,44 @@ function CommissionForm() {
         rows="4"
       />
 
+      {/* References */}
+      <label>
+        References (Upload Images)
+        <p className="form-help-text">
+          You can upload multiple images. Previewed images can be removed before
+          submitting.
+        </p>
+      </label>
+      <input
+        type="file"
+        name="references"
+        multiple
+        accept="image/*"
+        onChange={handleChange}
+      />
+      <div className="image-previews">
+        {referencePreviews.map((src, index) => (
+          <div key={index} className="preview-container">
+            <img src={src} alt={`preview-${index}`} className="preview-image" />
+            <button
+              type="button"
+              className="remove-button"
+              onClick={() => removeReference(index)}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
       {/* Character References */}
       <label>
         Character References
         <p className="form-help-text">
           Create your character(s) in{" "}
-          <a 
+          <a
             href="https://www.wowhead.com/dressing-room"
-            target="_blank" 
+            target="_blank"
             rel="noopener noreferrer"
             className="external-link"
           >
@@ -197,6 +278,20 @@ function CommissionForm() {
         accept="image/*"
         onChange={handleChange}
       />
+      <div className="image-previews">
+        {characterPreviews.map((src, index) => (
+          <div key={index} className="preview-container">
+            <img src={src} alt={`character-preview-${index}`} className="preview-image" />
+            <button
+              type="button"
+              className="remove-button"
+              onClick={() => removeCharacterReference(index)}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
 
       {/* Name */}
       <label>Your Name</label>
@@ -217,6 +312,7 @@ function CommissionForm() {
           name="email"
           value={formData.email}
           onChange={handleChange}
+          placeholder="youremail@email.com"
         />
         <label>Twitter</label>
         <input
@@ -232,7 +328,7 @@ function CommissionForm() {
           name="discord"
           value={formData.discord}
           onChange={handleChange}
-          placeholder="username#1234"
+          placeholder="username"
         />
       </fieldset>
 
@@ -247,7 +343,10 @@ function CommissionForm() {
       {/* Disclaimer */}
       <div className="form-disclaimer">
         <p>
-          Please note that I am a 3D artist, not a traditional drawing artist. Each model, pose, and scene is handcrafted, which takes time. I appreciate your patience and understanding. I communicate regularly to keep you updated on your commission.
+          Please note that I am a 3D artist, not a traditional drawing artist. Each
+          model, pose, and scene is handcrafted, which takes time. I appreciate
+          your patience and understanding. I communicate regularly to keep you
+          updated on your commission.
         </p>
       </div>
 

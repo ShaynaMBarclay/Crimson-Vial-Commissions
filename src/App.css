@@ -197,3 +197,47 @@ input[name="characterReferences"]:focus {
   text-align: center;
   text-shadow: 1px 1px 3px #000;
 }
+
+.image-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.preview-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.remove-button:hover {
+  background: red;
+}
