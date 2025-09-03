@@ -152,3 +152,17 @@ input[name="characterReferences"]:focus {
   border-color: #ffd700;
   box-shadow: 0 0 10px #ffd700;
 }
+
+/* Disclaimer box */
+.form-disclaimer {
+  background: rgba(20, 10, 5, 0.85);
+  border: 2px solid #8b5a2b;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: #ffe8b3;
+  font-family: 'Uncial Antiqua', serif;
+  text-shadow: 1px 1px 3px #000;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2) inset;
+}

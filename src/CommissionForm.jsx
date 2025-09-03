@@ -214,19 +214,13 @@ function CommissionForm() {
         />
       </fieldset>
 
-      {/* Price */}
-      <label>Price (USD)</label>
-      <input
-        type="number"
-        name="price"
-        value={formData.price}
-        onChange={handleChange}
-        min="5"
-        required
-      />
-
-      {/* PayPal button */}
-      <PaymentButton amount={formData.price} />
+      {/* Disclaimer */}
+      <div className="form-disclaimer">
+       <p>
+    Please note that I am a 3D artist, not a traditional drawing artist. Each model, pose, and scene is handcrafted, which takes time. 
+    I appreciate your patience and understanding throughout the process. I make it a priority to communicate regularly and keep you updated on your commission.
+      </p>
+    </div>
     </form>
   );
 }
