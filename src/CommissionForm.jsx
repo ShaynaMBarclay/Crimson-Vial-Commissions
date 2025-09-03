@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import emailjs from "@emailjs/browser";
 import priceList from "./assets/ellieform.png";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -27,6 +27,9 @@ function CommissionForm() {
   const [submitted, setSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
+  const referencesInputRef = useRef(null);
+  const characterInputRef = useRef(null);
+
   function handleChange(e) {
     const { name, value, files } = e.target;
 
@@ -34,14 +37,12 @@ function CommissionForm() {
       const newFiles = Array.from(files);
       const updatedFiles = [...formData.references, ...newFiles];
       setFormData({ ...formData, references: updatedFiles });
-
       const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
       setReferencePreviews([...referencePreviews, ...newPreviews]);
     } else if (name === "characterReferences") {
       const newFiles = Array.from(files);
       const updatedFiles = [...formData.characterReferences, ...newFiles];
       setFormData({ ...formData, characterReferences: updatedFiles });
-
       const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
       setCharacterPreviews([...characterPreviews, ...newPreviews]);
     } else {
@@ -53,7 +54,6 @@ function CommissionForm() {
     const updatedFiles = [...formData.references];
     updatedFiles.splice(index, 1);
     setFormData({ ...formData, references: updatedFiles });
-
     const updatedPreviews = [...referencePreviews];
     URL.revokeObjectURL(updatedPreviews[index]);
     updatedPreviews.splice(index, 1);
@@ -64,7 +64,6 @@ function CommissionForm() {
     const updatedFiles = [...formData.characterReferences];
     updatedFiles.splice(index, 1);
     setFormData({ ...formData, characterReferences: updatedFiles });
-
     const updatedPreviews = [...characterPreviews];
     URL.revokeObjectURL(updatedPreviews[index]);
     updatedPreviews.splice(index, 1);
@@ -75,40 +74,29 @@ function CommissionForm() {
     e.preventDefault();
 
     if (!formData.email && !formData.twitter && !formData.discord) {
-      alert(
-        "Please provide at least one contact method: Email, Twitter, or Discord."
-      );
+      alert("Please provide at least one contact method: Email, Twitter, or Discord.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Upload reference images
       const referenceUrls = await Promise.all(
         formData.references.map(async (file) => {
-          const storageRef = ref(
-            storage,
-            `references/${Date.now()}_${file.name}`
-          );
+          const storageRef = ref(storage, `references/${Date.now()}_${file.name}`);
           await uploadBytes(storageRef, file);
           return getDownloadURL(storageRef);
         })
       );
 
-      // Upload character reference images
       const characterUrls = await Promise.all(
         formData.characterReferences.map(async (file) => {
-          const storageRef = ref(
-            storage,
-            `characterReferences/${Date.now()}_${file.name}`
-          );
+          const storageRef = ref(storage, `characterReferences/${Date.now()}_${file.name}`);
           await uploadBytes(storageRef, file);
           return getDownloadURL(storageRef);
         })
       );
 
-      // Send email via EmailJS
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
@@ -131,10 +119,6 @@ function CommissionForm() {
 
       await emailjs.send(serviceId, templateId, templateParams, publicKey);
 
-      setStatusMessage("Your commission request has been sent successfully!");
-      setSubmitted(true);
-
-      // Clear form after submission
       setFormData({
         name: "",
         email: "",
@@ -152,13 +136,15 @@ function CommissionForm() {
       });
       setReferencePreviews([]);
       setCharacterPreviews([]);
+      if (referencesInputRef.current) referencesInputRef.current.value = "";
+      if (characterInputRef.current) characterInputRef.current.value = "";
 
       setIsSubmitting(false);
+      setStatusMessage("Your commission request has been sent successfully!");
+      setSubmitted(true);
     } catch (error) {
       console.error("Error submitting commission:", error);
-      setStatusMessage(
-        "There was an error sending your request. Please try again."
-      );
+      setStatusMessage("There was an error sending your request. Please try again.");
       setIsSubmitting(false);
     }
   }
@@ -167,259 +153,117 @@ function CommissionForm() {
     <form onSubmit={handleSubmit} className="commission-form">
       <h2>Commission Request</h2>
 
-      {/* Commission Details */}
       <label>
         Describe Your Commission
         <p className="form-help-text">
-          The more detail + references you can give me, (add your references
-          below) the more accurate I am able to be with your artwork. Otherwise
-          I will creatively interpret what I feel is best.
+          The more detail + references you can give me, (add your references below) the more accurate I am able to be with your artwork. Otherwise I will creatively interpret what I feel is best.
         </p>
       </label>
-      <textarea
-        name="requestDetails"
-        value={formData.requestDetails}
-        onChange={handleChange}
-        rows="5"
-        required
-      />
+      <textarea name="requestDetails" value={formData.requestDetails} onChange={handleChange} rows="5" required />
 
-      {/* Intended Use */}
       <label>
         Intended Use
         <p className="form-help-text">
-          What will this artwork be used for? Please include sizing information
-          if you know it. If unsure, I can help. For computer-related projects,
-          please include screen resolution or other technical details.
+          What will this artwork be used for? Please include sizing information if you know it. If unsure, I can help. For computer-related projects, please include screen resolution or other technical details.
         </p>
       </label>
-      <textarea
-        name="intendedUse"
-        value={formData.intendedUse}
-        onChange={handleChange}
-        rows="4"
-      />
+      <textarea name="intendedUse" value={formData.intendedUse} onChange={handleChange} rows="4" />
 
-      {/* Number of Subjects */}
       <label>
         Number of Subjects/Models
         <p className="form-help-text">
           How many characters, figures, or models would you like included?
         </p>
       </label>
-      <input
-        type="number"
-        name="subjectCount"
-        value={formData.subjectCount}
-        onChange={handleChange}
-        min="1"
-        required
-      />
+      <input type="number" name="subjectCount" value={formData.subjectCount} onChange={handleChange} min="1" required />
 
-      {/* Subject Details */}
       <label>
         Subject Details
         <p className="form-help-text">
-          Describe the subjects: names, roles, personalities, are they mounts,
-          pets, etc. Or traits to capture.
+          Describe the subjects: names, roles, personalities, are they mounts, pets, etc. Or traits to capture.
         </p>
       </label>
-      <textarea
-        name="subjectDetails"
-        value={formData.subjectDetails}
-        onChange={handleChange}
-        rows="3"
-      />
+      <textarea name="subjectDetails" value={formData.subjectDetails} onChange={handleChange} rows="3" />
 
-      {/* Pose & Expression */}
       <label>
         Pose & Expression
         <p className="form-help-text">
           Provide details on pose(s) and expressions. Leave blank if unsure.
         </p>
       </label>
-      <textarea
-        name="poseExpression"
-        value={formData.poseExpression}
-        onChange={handleChange}
-        rows="3"
-      />
+      <textarea name="poseExpression" value={formData.poseExpression} onChange={handleChange} rows="3" />
 
-      {/* Setting & Atmosphere */}
       <label>
         Setting & Atmosphere
         <p className="form-help-text">
-          Provide details on setting: time of day, location, weather, etc.
-          Screenshots can be uploaded below.
+          Provide details on setting: time of day, location, weather, etc. Screenshots can be uploaded below.
         </p>
       </label>
-      <textarea
-        name="settingAtmosphere"
-        value={formData.settingAtmosphere}
-        onChange={handleChange}
-        rows="4"
-      />
+      <textarea name="settingAtmosphere" value={formData.settingAtmosphere} onChange={handleChange} rows="4" />
 
-      {/* References */}
       <label>
         References (Upload Images)
         <p className="form-help-text">
-          You can upload multiple images. Previewed images can be removed before
-          submitting.
+          You can upload multiple images. Previewed images can be removed before submitting.
         </p>
       </label>
-      <input
-        type="file"
-        name="references"
-        multiple
-        accept="image/*"
-        onChange={handleChange}
-      />
+      <input type="file" name="references" multiple accept="image/*" onChange={handleChange} ref={referencesInputRef} />
       <div className="image-previews">
         {referencePreviews.map((src, index) => (
           <div key={index} className="preview-container">
             <img src={src} alt={`preview-${index}`} className="preview-image" />
-            <button
-              type="button"
-              className="remove-button"
-              onClick={() => removeReference(index)}
-            >
-              ×
-            </button>
+            <button type="button" className="remove-button" onClick={() => removeReference(index)}>×</button>
           </div>
         ))}
       </div>
 
-      {/* Character References */}
       <label>
         Character References
         <p className="form-help-text">
-          Create your character(s) in{" "}
-          <a
-            href="https://www.wowhead.com/dressing-room"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="external-link"
-          >
-            WoWHead’s Dressing Room
-          </a>{" "}
-          and send the link below. Upload in-game screenshots if available.
+          Create your character(s) in <a href="https://www.wowhead.com/dressing-room" target="_blank" rel="noopener noreferrer" className="external-link">WoWHead’s Dressing Room</a> and send the link below. Upload in-game screenshots if available.
         </p>
       </label>
-      <input
-        type="url"
-        name="characterLink"
-        value={formData.characterLink}
-        onChange={handleChange}
-        placeholder="Paste WoWHead dressing room link here"
-      />
-      <input
-        type="file"
-        name="characterReferences"
-        multiple
-        accept="image/*"
-        onChange={handleChange}
-      />
+      <input type="url" name="characterLink" value={formData.characterLink} onChange={handleChange} placeholder="Paste WoWHead dressing room link here" />
+      <input type="file" name="characterReferences" multiple accept="image/*" onChange={handleChange} ref={characterInputRef} />
       <div className="image-previews">
         {characterPreviews.map((src, index) => (
           <div key={index} className="preview-container">
-            <img
-              src={src}
-              alt={`character-preview-${index}`}
-              className="preview-image"
-            />
-            <button
-              type="button"
-              className="remove-button"
-              onClick={() => removeCharacterReference(index)}
-            >
-              ×
-            </button>
+            <img src={src} alt={`character-preview-${index}`} className="preview-image" />
+            <button type="button" className="remove-button" onClick={() => removeCharacterReference(index)}>×</button>
           </div>
         ))}
       </div>
 
-      {/* Name */}
       <label>Your Name</label>
-      <input
-        type="text"
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        required
-      />
+      <input type="text" name="name" value={formData.name} onChange={handleChange} required />
 
-      {/* Contact Info */}
       <fieldset className="contact-info">
         <legend>Contact Information (at least one required)</legend>
         <label>Email</label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="youremail@email.com"
-        />
+        <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="youremail@email.com" />
         <label>Twitter</label>
-        <input
-          type="text"
-          name="twitter"
-          value={formData.twitter}
-          onChange={handleChange}
-          placeholder="@yourhandle"
-        />
+        <input type="text" name="twitter" value={formData.twitter} onChange={handleChange} placeholder="@yourhandle" />
         <label>Discord</label>
-        <input
-          type="text"
-          name="discord"
-          value={formData.discord}
-          onChange={handleChange}
-          placeholder="username"
-        />
+        <input type="text" name="discord" value={formData.discord} onChange={handleChange} placeholder="username" />
       </fieldset>
 
-      {/* Submit Button */}
       <button type="submit" disabled={isSubmitting} className="submit-button">
         {isSubmitting ? "Submitting..." : "Submit Commission Request"}
       </button>
 
-      {/* Disclaimer */}
       <div className="form-disclaimer">
         <p>
-          Please note that I am a 3D artist, not a traditional drawing artist.
-          Each model, pose, and scene is handcrafted, which takes time. I
-          appreciate your patience and understanding. I communicate regularly to
-          keep you updated on your commission.
+          Please note that I am a 3D artist, not a traditional drawing artist. Each model, pose, and scene is handcrafted, which takes time. I appreciate your patience and understanding. I communicate regularly to keep you updated on your commission.
         </p>
         <p>
-          Please reference the price list below. I will confirm the full price
-          with you before starting the project. I will reach out via the
-          selected platform and contact information you provided. For example,
-          if you choose Twitter or Discord, messaging must be turned on and
-          easily accessible for smooth communication. Accounts without easily
-          accessible messaging cannot be contacted, so please keep this in mind.
-          If this may be a problem, you can reach me at{" "}
-          <a
-            href="https://x.com/crimson_vial"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            My Twitter
-          </a>
-          .
+          Please reference the price list below. I will confirm the full price with you before starting the project. I will reach out via the selected platform and contact information you provided. For example, if you choose Twitter or Discord, messaging must be turned on and easily accessible for smooth communication. Accounts without easily accessible messaging cannot be contacted, so please keep this in mind. If this may be a problem, you can reach me at <a href="https://x.com/crimson_vial" target="_blank" rel="noopener noreferrer">My Twitter</a>.
         </p>
       </div>
 
-      {/* Status Message */}
       {statusMessage && <p className="submission-success">{statusMessage}</p>}
 
-      {/* Price List Image */}
       <div className="price-list-container">
-        <img
-          src={priceList}
-          alt="Commission Price List"
-          className="price-list-image"
-        />
+        <img src={priceList} alt="Commission Price List" className="price-list-image" />
       </div>
     </form>
   );
