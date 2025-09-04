@@ -18,13 +18,12 @@ function CommissionForm() {
     settingAtmosphere: "",
     references: [],
     characterReferences: [],
-    characterLink: "",
+    characterLinks: [""], // start with one empty link field
   });
 
   const [referencePreviews, setReferencePreviews] = useState([]);
   const [characterPreviews, setCharacterPreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   const referencesInputRef = useRef(null);
@@ -48,6 +47,22 @@ function CommissionForm() {
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  }
+
+  function handleLinkChange(index, value) {
+    const newLinks = [...formData.characterLinks];
+    newLinks[index] = value;
+    setFormData({ ...formData, characterLinks: newLinks });
+  }
+
+  function addLinkField() {
+    setFormData({ ...formData, characterLinks: [...formData.characterLinks, ""] });
+  }
+
+  function removeLinkField(index) {
+    const newLinks = [...formData.characterLinks];
+    newLinks.splice(index, 1);
+    setFormData({ ...formData, characterLinks: newLinks });
   }
 
   function removeReference(index) {
@@ -101,6 +116,10 @@ function CommissionForm() {
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
+      const characterLinks = formData.characterLinks
+        .filter(link => link.trim() !== "")
+        .join("\n");
+
       const templateParams = {
         name: formData.name,
         email: formData.email,
@@ -112,7 +131,7 @@ function CommissionForm() {
         subjectDetails: formData.subjectDetails,
         poseExpression: formData.poseExpression,
         settingAtmosphere: formData.settingAtmosphere,
-        characterLink: formData.characterLink,
+        characterLink: characterLinks,
         referenceFiles: referenceUrls.join("\n"),
         characterFiles: characterUrls.join("\n"),
       };
@@ -132,7 +151,7 @@ function CommissionForm() {
         settingAtmosphere: "",
         references: [],
         characterReferences: [],
-        characterLink: "",
+        characterLinks: [""],
       });
       setReferencePreviews([]);
       setCharacterPreviews([]);
@@ -141,7 +160,6 @@ function CommissionForm() {
 
       setIsSubmitting(false);
       setStatusMessage("Your commission request has been sent successfully!");
-      setSubmitted(true);
     } catch (error) {
       console.error("Error submitting commission:", error);
       setStatusMessage("There was an error sending your request. Please try again.");
@@ -220,10 +238,24 @@ function CommissionForm() {
       <label>
         Character References
         <p className="form-help-text">
-          Create your character(s) in <a href="https://www.wowhead.com/dressing-room" target="_blank" rel="noopener noreferrer" className="external-link">WoWHead’s Dressing Room</a> and send the link below. Upload in-game screenshots if available.
+          Create your character(s) in <a href="https://www.wowhead.com/dressing-room" target="_blank" rel="noopener noreferrer" className="external-link">WoWHead’s Dressing Room</a> and add your links below. Upload in-game screenshots if available.
         </p>
       </label>
-      <input type="url" name="characterLink" value={formData.characterLink} onChange={handleChange} placeholder="Paste WoWHead dressing room link here" />
+
+      {formData.characterLinks.map((link, index) => (
+        <div key={index} className="character-link-field">
+          <input
+            type="url"
+            value={link}
+            onChange={(e) => handleLinkChange(index, e.target.value)}
+            placeholder="Paste WoWHead dressing room link"
+            required
+          />
+          <button type="button" onClick={() => removeLinkField(index)}>Remove</button>
+        </div>
+      ))}
+      <button type="button" onClick={addLinkField}>Add Link</button>
+
       <input type="file" name="characterReferences" multiple accept="image/*" onChange={handleChange} ref={characterInputRef} />
       <div className="image-previews">
         {characterPreviews.map((src, index) => (
@@ -267,7 +299,6 @@ function CommissionForm() {
       </div>
       <div className="watermark">Created by @Sylvariae</div>
     </form>
-    
   );
 }
 
